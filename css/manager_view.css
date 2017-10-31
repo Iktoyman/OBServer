@@ -1,0 +1,14 @@
+.page-tableHeader {
+	margin-bottom: 1%;
+	padding-bottom: 0.5%;
+}
+
+.employee-progress-table {
+	max-width: 90%;
+	margin: 0 auto;
+}
+
+.employee-progress-table th {
+	text-align: center;
+	padding: 1%;
+}

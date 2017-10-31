@@ -1,0 +1,32 @@
+.page-tableHeader {
+	margin-bottom: 1%;
+	padding-bottom: 0.5%;
+}
+
+.employee-progress-table {
+	max-width: 70%;
+	margin: 0 auto;
+	margin-bottom: 2.5%
+}
+
+.employee-progress-table th {
+	text-align: center;
+	padding: 1%;
+}
+
+.item-classification-td {
+	text-align: center;
+	font-weight: bold;
+	font-size: 1.1vw;
+}
+
+.add-item-btn:hover {
+	cursor: pointer;
+	text-decoration: none;
+}
+
+#add_item_modal select, #add_item_modal input {
+	padding: 0.25vw;
+	width: 60%;
+	line-height: 1.25vw;
+}
