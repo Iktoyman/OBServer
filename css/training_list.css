@@ -4,7 +4,7 @@
 }
 
 .employee-progress-table {
-	max-width: 70%;
+	max-width: 60%;
 	margin: 0 auto;
 	margin-bottom: 2.5%
 }
@@ -20,13 +20,93 @@
 	font-size: 1.1vw;
 }
 
+.edit-name {
+	width: 50%;
+	padding: 0.25vw;
+}
+
+.edit-td {
+	display: none;
+}
+
+.edit-span, .save-span {
+	float: right;
+}
+
+.edit-btn {
+	color: rgb(000, 201, 255);
+	cursor: pointer;
+}
+
+.save-edit-btn {
+	color: green;
+	cursor: pointer;
+	font-size: 1vw;
+}
+
+.delete-btn, .cancel-edit-btn {
+	color: red;
+	cursor: pointer;
+}
+
+#add_item_modal .modal-dialog {
+	width: 70%;
+}
+
+.add-selection-list-div {
+	margin-left: 15%;
+}
+
+.add-selection-list {
+	list-style: none;
+}
+
+.add-selection-list li {
+	display: inline;
+	margin-right: 27.5%;
+	font-size: 1vw;
+	font-weight: bold;
+}
+
+.add-item-table {
+	width: 90%;
+	margin: 0 auto;
+}
+
+.add-item-table td {
+	padding: 1.5%;
+}
+
+.logo-selection-list {
+	list-style: none;
+	display: inline;
+}
+
+.logo-selection-list li {
+	margin: 2.5%;
+}
+
 .add-item-btn:hover {
 	cursor: pointer;
 	text-decoration: none;
 }
 
+.team-specific-option-td, .team-specific-option-subtd {
+	display: none;
+}
+
 #add_item_modal select, #add_item_modal input {
 	padding: 0.25vw;
-	width: 60%;
+	width: 75%;
 	line-height: 1.25vw;
+	height: 2.25vw;
+}
+
+#add_item_modal input[type=radio] {
+	width: 5%;
+	height: 0.8vw;
+}
+
+#days_completion {
+	width: 15% !important;
 }

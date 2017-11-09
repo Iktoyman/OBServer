@@ -4,6 +4,13 @@
     require "connect.php";
     require "../connect.php";
     session_start();
+    require "establish_user.php";
+
+    // Check if manager, and get team if so.
+    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
+    if (mysqli_num_rows($is_manager)) {
+        $handled_team = mysqli_fetch_array($is_manager);
+    }
 
     if (isset($_GET['user'])) {
         $user_id = $_GET['user'];
@@ -84,7 +91,7 @@ if ($load_div) echo "<body onload=show_class('".$_GET['id']."Div')>";
 else echo "<body>";
 ?>
     <header class="headerStyle">
-        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../OBserver" class="titleHeaderStyle">OBserver</a></div>
+        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="./" class="titleHeaderStyle">OBserver</a></div>
     </header>
 
 
@@ -93,22 +100,32 @@ else echo "<body>";
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
             <ul class="sidebar-nav">
-                <li class="sidebar-brand">
-                    <a href="#">
-                        KMS v2
-                    </a>
+                <li>
+                    <a href="./connect"> Manager Connect </a>
                 </li>
                 <li>
-                    <a href="#">Profile</a>
+                    <a href="#">Dashboard</a>
                 </li>
                 <li>
-                    <a href="#">Add Member</a>
+                    <a href="manager_view.php">Manager View</a>
                 </li>
                 <li>
-                    <a href="#">Add Training</a>
+                    <?php echo "<a href='training_list.php?team=".$handled_team['team_id']."'>Trainings</a>"; ?>
                 </li>
                 <li>
-                    <a href="#">View Report</a>
+                    <a href="#">Overview</a>
+                </li>
+                <li>
+                    <a href="#">Events</a>
+                </li>
+                <li>
+                    <a href="#">About</a>
+                </li>
+                <li>
+                    <a href="#">Services</a>
+                </li>
+                <li>
+                    <a href="#">Contact</a>
                 </li>
             </ul>
         </div>
@@ -171,8 +188,12 @@ else echo "<body>";
                                         if ($item_row['status'] == 'Completed')
                                             echo "<td colspan=2>" . $item_row['status'] . "</td>";
                                         else {
-                                            echo "<td>" . $item_row['status'] . "</td>";
-                                            echo "<td width=5%><a class='progress-btn' id='item_row".$item_row['tracked_item_id']."' onclick='markAsComplete(this.id, ".$item_row['tracked_item_id'].")'><span class='progress-btn-span glyphicon glyphicon-ok' style='float:right'></span></a></td>";
+                                            if (isset($_SESSION['ob_manager_id']) || (isset($_SESSION['ob_trainer_id']) && in_array($ic['id'], explode(',', $_SESSION['ob_trainer_items']))) || $_SESSION['ob_uid'] == $user_id) {
+                                                echo "<td>" . $item_row['status'] . "</td>";
+                                                echo "<td width=5%><a class='progress-btn' id='item_row".$item_row['tracked_item_id']."' onclick='markAsComplete(this.id, ".$item_row['tracked_item_id'].")'><span class='progress-btn-span glyphicon glyphicon-ok' style='float:right'></span></a></td>";
+                                            }
+                                            else 
+                                                echo "<td colspan=2>" . $item_row['status'] . "</td>";
                                         }
                                     echo "</tr>";
                                 }

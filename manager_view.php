@@ -13,6 +13,12 @@
 
     if (isset($_GET['id'])) $load_div = true;
     else $load_div = false;
+
+    $item_classifications = array();
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL");
+    while ($ic_row = mysqli_fetch_array($ic_res)) {
+        $item_classifications[] = $ic_row;
+    }
 ?>
 
 <head>
@@ -63,7 +69,7 @@ if ($load_div) echo "<body onload=show_class('".$_GET['id']."Div')>";
 else echo "<body>";
 ?>
     <header class="headerStyle">
-        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../OBserver" class="titleHeaderStyle">OBserver</a></div>
+        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="./" class="titleHeaderStyle">OBserver</a></div>
     </header>
 
 
@@ -114,17 +120,14 @@ else echo "<body>";
                 <table class='GeneratedTable employee-progress-table'>
                     <thead>
                         <tr>
-                            <th rowspan=2 width=25%> Name </th>
+                            <th rowspan=2 width=20%> Name </th>
                             <th rowspan=2 width=10%> Employee ID </th>
-                            <th colspan=4> Training Classification </th>
+                            <?php echo "<th colspan=".sizeof($item_classifications)."> Training Classification </th>"; ?>
                         </tr>
                         <tr>
                         <?php
-                            $item_classifications = array();
-                            $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL");
-                            while ($ic_row = mysqli_fetch_array($ic_res)) {
-                                $item_classifications[] = $ic_row;
-                                echo "<th width=5%>" . $ic_row['item_classification_name'] . "</th>";
+                            for ($x = 0; $x < sizeof($item_classifications); $x++) {
+                                echo "<th width=5%>" . $item_classifications[$x]['item_classification_name'] . "</th>";
                             }
                         ?>
                         </tr>

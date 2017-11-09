@@ -4,6 +4,7 @@
     require "connect.php";
     require "../connect.php";
     session_start();
+    require "establish_user.php";
 
     // Check if manager, and get team if so.
     $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
@@ -12,9 +13,16 @@
     }
 
     $team = $_GET['team'];
+    // Get accounts under team
+    $accounts = array();
+    $acct_res = mysqli_query($link, "SELECT account_id, account_acronym, account_name FROM account WHERE team_id = $team ORDER BY account_acronym");
+    while ($acct = mysqli_fetch_array($acct_res))
+        $accounts[] = $acct;
+
+    $team_name = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_name FROM team WHERE team_id = $team"))['team_name'];
 
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL");
     while ($ic_row = mysqli_fetch_array($ic_res))
         $item_classifications[] = $ic_row;
 
@@ -62,7 +70,7 @@
 
 <body>
     <header class="headerStyle">
-        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../OBserver" class="titleHeaderStyle">OBserver</a></div>
+        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="./" class="titleHeaderStyle">OBserver</a></div>
     </header>
 
 
@@ -81,7 +89,7 @@
                     <a href="manager_view.php">Manager View</a>
                 </li>
                 <li>
-                    <a href="#">Shortcuts</a>
+                    <?php echo "<a href='training_list.php?team=".$handled_team['team_id']."'>Trainings</a>"; ?>
                 </li>
                 <li>
                     <a href="#">Overview</a>
@@ -106,15 +114,21 @@
         <div class="row">
             <div class="col-lg-12 page-tableHeader">
                 <div class="progressHeader" id="progressHeader">
-                    <?php echo $handled_team['team_name']; ?> Training List
+                    <?php echo $team_name; ?> Training List
                 </div>
             </div>
             <div>
+                <div class='add-selection-list-div'>
+                    <ul class='add-selection-list'>
+                        <li><a class='add-item-btn' id='itemclass_'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under existing Classification </a></li>
+                        <li><a class='add-item-btn' id='itemclass_new'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under New Classification </a></li>
+                    </ul>
+                </div>
                 <table class='GeneratedTable employee-progress-table'>
                     <thead>
                         <tr>
-                            <th colspan=2 width=35%> Training Classification </th>
-                            <th width=65%> Training Details </th>
+                            <th width=27.5%> Training Classification </th>
+                            <th width=72.5%> Training Details </th>
                         </tr>
                         <tr>
                         </tr>
@@ -124,14 +138,25 @@
                         for ($x = 0; $x < sizeof($item_classifications); $x++) {
                             $item_count = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(item_id) AS ct FROM item WHERE item_classification_id = " . $item_classifications[$x]['item_classification_id']))['ct'] + 1;
                             echo "<tr>"
-                            . "<td class='item-classification-td' rowspan=$item_count><img height='60px' width='60px' src='" . $item_classifications[$x]['icon_path'] . "'></td>"
-                            . "<td class='item-classification-td' rowspan=$item_count>" . $item_classifications[$x]['item_classification_name'] . "</td>";
+                            . "<td class='item-classification-td' style='border-right: 0' rowspan=$item_count><img height='90px' width='90px' src='" . $item_classifications[$x]['icon_path'] . "'><br>" . $item_classifications[$x]['item_classification_name'] . "</td>";
                             $item_res = mysqli_query($link, "SELECT item_id, item_name FROM item WHERE item_classification_id = " . $item_classifications[$x]['item_classification_id']);
                             $a = 0;
                             while ($item_row = mysqli_fetch_array($item_res)) {
                                 if ($a > 0)
                                     echo "<tr>";
-                                echo "<td>" . $item_row['item_name'] . "</td>";
+                                echo "<td class='item-td' id='item-td" . $item_row['item_id'] . "'>" 
+                                . "<span id='itemname_".$item_row['item_id']."'>" . $item_row['item_name'] . "</span>"
+                                . "<span class='edit-span' id='item_".$item_row['item_id']."'>"
+                                . "<a class='edit-btn'><span class='glyphicon glyphicon-pencil'></span></a>&nbsp;&nbsp;"
+                                . "<a class='delete-btn'><span class='glyphicon glyphicon-remove'></span></a>"
+                                . "</span>"
+                                . "</td>";
+                                echo '<td class="edit-td" id="edit-td' . $item_row['item_id'] . '">' 
+                                . '<span id="itemname_' . $item_row['item_id'] . '"><input type="text" name="edit-name" class="edit-name" id="edit-name' . $item_row['item_id'] . '" value="' . $item_row['item_name'] . '"></span>'
+                                . '<span class="save-span" id="save_item_' . $item_row['item_id'] . '">'
+                                . '<a class="save-edit-btn" id="save-edit-btn' . $item_row['item_id'] . '" onclick="saveEdit(this.id)"><span class="glyphicon glyphicon-ok"></span></a>&nbsp;&nbsp;'
+                                . '<a class="cancel-edit-btn" id="cancel-edit-btn' . $item_row['item_id'] . '" onclick="cancelEdit(this.id)"><span class="glyphicon glyphicon-remove"></span></a></span>'
+                                . '</td>';
                                 echo "</tr>";
                             }
                             echo "<tr><td><a class='add-item-btn' id='itemclass_".$item_classifications[$x]['item_classification_id']."'><span class='glyphicon glyphicon-plus'></span>&nbsp;&nbsp; Add Item </a></td></tr>";
@@ -175,18 +200,76 @@
                 <h4 class="modal-title" id="myModalLabel" style="color: black;"> Add New Training Item </h4>
             </div> 
             <div class="modal-body" style="color: black;">
-                <label> Training Classification </label><br>
-                <select name='training_class_select' id='training_class_select'>
-                    <option value=''> -- Select Classification -- </option>
-                <?php
-                    for ($x = 0; $x < sizeof($item_classifications); $x++) {
-                        echo "<option value=" . $item_classifications[$x]['item_classification_id'] . ">" . $item_classifications[$x]['item_classification_name'] . "</option>";   
-                    }
-                ?>
-                </select>
-                <br><br>
-                <label> Training Name </label> <br>
-                <input type='text' name='training_name' id='training_name' placeholder='Training Name' />
+                <table class='add-item-table'>
+                    <tr>
+                        <td width=50%>
+                            <label> Training Classification </label><br>
+                            <select name='training_class_select' id='training_class_select'>
+                                <option value=''> -- Select Classification -- </option>
+                            <?php
+                                for ($x = 0; $x < sizeof($item_classifications); $x++) {
+                                    echo "<option value=" . $item_classifications[$x]['item_classification_id'] . ">" . $item_classifications[$x]['item_classification_name'] . "</option>";   
+                                }
+                            ?>
+                                <option value='new'> + Create New Classification</option>
+                            </select>
+                        </td>
+                        <td class='team-specific-option-td'>
+                            <label> Classification Name </label><br>
+                            <input type='text' name='new_classification_name' id='new_classification_name' placeholder="Item Classification Name" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td width=50% class='team-specific-option-td'>
+                            <label> Training Type </label><br>
+                            <select name='training_type' id='training_type'>
+                                <option value='gen'> General (Applicable to entire Organization) </option>
+                                <option value='team'> Team-Specific </option>
+                            </select>
+                        </td>
+                        <td class='team-specific-option-subtd'>
+                            <label> Team Accounts </label><br>
+                            <select name='team_accounts' id='team_accounts'>
+                            <?php
+                                for ($a = 0; $a < sizeof($accounts); $a++) {
+                                    echo "<option value=" . $accounts[$a]['account_id'] . ">" . $accounts[$a]['account_acronym'] . " - " . $accounts[$a]['account_name'] . "</option>";
+                                }
+                            ?>
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td colspan=2 class='team-specific-option-td'>
+                            <label> Classification Logo </label><br>
+                            <input type='text' name='logo_name' id='logo_name' placeholder="Enter logo filename. Do not use any special characters or spaces. Ex: teamTraining" />
+                            <ul class='logo-selection-list'>
+                                <br><br><br>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/certifications.png'> <img src='img/certifications.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/eaoAccli.png'> <img src='img/eaoAccli.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/genOnboard.png'> <img src='img/genOnboard.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/techTraining.png'> <img src='img/techTraining.png' width=64px> </input>
+                                <br><br><br>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/nestleExams.png'> <img src='img/nestleExams.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/nestleOnboard.png'> <img src='img/nestleOnboard.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/name.png'> <img src='img/name.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/team.png'> <img src='img/team.png' width=64px> </input>
+                            </ul>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td width=50%>
+                            <label> Training Name </label> <br>
+                            <input type='text' name='training_name' id='training_name' placeholder='Training Name' />
+                        </td>
+                        <td>
+                            <label> Days Before Completion </label> <br>
+                            <input type='number' name='days_completion' id='days_completion' value=0 />
+                        </td>
+                    </tr>
+                </table>
             </div>
             <div class="modal-footer">
                 <button type="button" id="add-item_save" class="btn btn-primary">Save changes</button> 

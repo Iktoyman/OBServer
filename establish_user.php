@@ -63,7 +63,24 @@
 			$_SESSION['ob_uid'] = $user_row['user_id'];
 			$_SESSION['ob_team'] = $user_row['team_id'];
 			//echo "User exists<br><br>";
-			// Set session variables 
+			// Set session variables
+
+	    // Check if trainer
+	    $is_trainer = mysqli_query($link, "SELECT trainer_id FROM trainer WHERE user_id = " . $_SESSION['ob_uid']);
+	    if (mysqli_num_rows($is_trainer)) {
+	        $_SESSION['ob_trainer_id'] = mysqli_fetch_assoc($is_trainer)['trainer_id'];
+	        $handled_trainings = mysqli_query($link, "SELECT item_classification_id FROM trainer_responsibility WHERE trainer_id = " . $_SESSION['ob_trainer_id']);
+	        $trainings = array();
+	        while ($tr_row = mysqli_fetch_assoc($handled_trainings))
+	        	$trainings[] = $tr_row['item_classification_id'];
+	        $_SESSION['ob_trainer_items'] = implode(',', $trainings);
+	    }
+
+	    // Check if manager
+	    $is_manager = mysqli_query($link, "SELECT manager_id FROM manager WHERE user_id = " . $_SESSION['ob_uid']);
+	    if (mysqli_num_rows($is_manager)) {
+	    	$_SESSION['ob_manager_id'] = mysqli_fetch_assoc($is_manager)['manager_id'];
+	    }
 		}
 		else {
 			 echo "<script>";
