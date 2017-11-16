@@ -19,6 +19,14 @@
 
 			echo json_encode($ar);
 		}
+		else if ($_POST['action'] == 'mark_notapplicable') {
+			$id = $_POST['id'];
+
+			$qry = "UPDATE tracked_item SET status ='N/A', completion_date = NOW() WHERE tracked_item_id = " . $id;
+			$result = mysqli_query($link, $qry) ? 1 : 0;
+
+			echo json_encode($result);
+		}
 		else if ($_POST['action'] == 'add_training_item') {
 			$item_class = $_POST['item_class'];
 			$item_class_name = $_POST['item_class_name'];
