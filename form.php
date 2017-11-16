@@ -56,11 +56,13 @@
     <div class="formStyle">
         <table> 
         <form method="POST" action="">
+            <!--
             <tr>
                 <td class="formtdStyle">Employee Number:</td>
                 <td><img src="img/idnumber.png" style="width: 50px; height:50px"></td>
                 <td class="formInputStyle"><input type="text" name="emp_id"></td>
             </tr>
+            -->
             <tr>
                 <td class="formtdStyle">Hire Date:</td>
                 <td><img src="img/calendar.png" style="width: 50px; height:50px"></td>
@@ -110,7 +112,7 @@
 
     <?php
     if (isset($_POST['user_signup'])) {
-        $emp_id = $_POST['emp_id'];
+        //$emp_id = $_POST['emp_id'];
         $hire_date = new DateTime($_POST['hire_date']);
         $hire_date = date_format($hire_date, 'Y-m-d');
         $team = $_POST['team'];
@@ -120,7 +122,7 @@
         $first_name = $_SESSION['first_name'];
         $last_name = $_SESSION['last_name'];
 
-        if (mysqli_query($link, "INSERT INTO users(employee_id, username, first_name, last_name, hire_date, team_id, team_join_date) VALUES(" . $emp_id . ", '" . $username . "', '" . $first_name . "', '" . $last_name . "', '" . $hire_date . "', " . $team . ", '" . $join_date . "')")) {
+        if (mysqli_query($link, "INSERT INTO users(username, first_name, last_name, hire_date, team_id, team_join_date) VALUES('" . $username . "', '" . $first_name . "', '" . $last_name . "', '" . $hire_date . "', " . $team . ", '" . $join_date . "')")) {
           $user_id = mysqli_insert_id($link);
           $_SESSION['ob_uid'] = $user_id;
           $_SESSION['ob_team'] = $team;
@@ -133,7 +135,7 @@
             }
           }
           echo "<script>";
-          echo "alert('User successfully added! Welcome to *Onboarding Tracker Name*!');";
+          echo "alert('User successfully added! Welcome to OBServer!');";
           echo "window.location.href = '".$destination."'";
           echo "</script>";
         }

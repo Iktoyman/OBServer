@@ -37,7 +37,7 @@
 <body>
 <?php
     require "connect.php";
-    require "../connect.php";
+    require "../../connect.php";
     session_start();
     require "establish_user.php";
 
@@ -52,7 +52,7 @@
     }
 ?>
     <header class="headerStyle">
-        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle">OBserver</div>
+        <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></div>
     </header>
 
 
@@ -68,7 +68,7 @@
                         <center>
                             <table style="margin-top: 3%">  
                             <?php
-                            /*
+                                
                             $i = 0;
                             $team = $_SESSION['ob_team'];
                             $res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = " . $team . ") OR account_id IS NULL");
@@ -77,7 +77,7 @@
                                 $ic_id = substr($ic_id, 0, strpos($ic_id, '.'));
                                 if ($i % 4 == 0)
                                     echo "<tr>";
-                                echo "<td class='tdStyle' onmouseover=item_class_mo('".$ic_id."') onmouseout=item_class_moh('".$ic_id."')>";
+                                echo "<td class='tdStyle' onmouseover=item_class_mo('".$ic_id."') onmouseout=item_class_moh('".$ic_id."') width=22.5%>";
                                     echo "<a href='progress.php?id=".$ic_id."'>";
                                         echo "<img src='" . $ic_row['icon_path'] . "' class='iconStyle' id='".$ic_id."'>";
                                         echo "<br><br>";
@@ -97,30 +97,7 @@
                                 if ($i % 4 == 0)
                                     echo "</tr>";
                             }
-                            */
-                            echo "<tr>"
-                            . "<td class='tdStyle' onmouseover=item_class_mo('training') onmouseout=item_class_moh('training')>"
-                            . "<a href='training/'>"
-                            . "<img src='img/training.png' class='iconStyle' id='training'>"
-                            . "<br><br>"
-                            . "<center><span class='titleIconStyle'>Trainings</span></center>"
-                            . "</a>"
-                            . "</td>"
-                            . "<td class='tdStyle' onmouseover=item_class_mo('idnumber') onmouseout=item_class_moh('idnumber')>"
-                            . "<a href='access/'>"
-                            . "<img src='img/idnumber.png' class='iconStyle' id='idnumber'>"
-                            . "<br><br>"
-                            . "<center><span class='titleIconStyle'>Accesses</span></center>"
-                            . "</a>"
-                            . "</td>"
-                            . "<td class='tdStyle' onmouseover=item_class_mo('name') onmouseout=item_class_moh('name')>"
-                            . "<a href='skills/'>"
-                            . "<img src='img/name.png' class='iconStyle' id='name'>"
-                            . "<br><br>"
-                            . "<center><span class='titleIconStyle'>Skills  </span></center>"
-                            . "</a>"
-                            . "</td>";
-                            echo "</tr>";
+                                
                             ?>
                             </table>
                         </center>
