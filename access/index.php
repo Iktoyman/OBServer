@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     
-    <title>OBServer - Training</title>
+    <title>OBServer - Access</title>
     <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon">
     <link rel="icon" href="../../favicon.ico" type="image/x-icon">
 
@@ -56,7 +56,7 @@
     <header class="headerStyle">
         <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></span>
         <span class="glyphicon glyphicon-chevron-right headerChevron"></span>
-        <a href="./" class="subtitleHeaderStyle"> Training </a>
+        <a href="./" class="subtitleHeaderStyle"> Access </a>
     </header>
 
 
@@ -75,7 +75,7 @@
                                 
                             $i = 0;
                             $team = $_SESSION['ob_team'];
-                            $res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $team . ") OR account_id IS NULL) AND type_id = 1");
+                            $res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $team . ") OR account_id IS NULL) AND type_id = 2");
                             while ($ic_row = mysqli_fetch_array($res)) {
                                 $ic_id = substr($ic_row['icon_path'], 4);
                                 $ic_id = substr($ic_id, 0, strpos($ic_id, '.'));
@@ -92,10 +92,10 @@
                                         $total_ct = mysqli_fetch_assoc($total_qry)['total'];
                                         $percentage_completion = ($completed_ct / $total_ct) * 100;
                                         if ($percentage_completion == 0) $percentage_completion = 1;
-                                        echo "<div class='progress-bar progress-bar-striped active' role='progressbar' aria-valuenow='".$percentage_completion."' aria-valuemin='0' aria-valuemax='100' style='width:100%'>";
-                                            echo $completed_ct . " of " . $total_ct . " completed";
-                                        echo "</div>";
                                     echo "</a>";
+                                    echo "<div class='progress-bar progress-bar-striped active' role='progressbar' aria-valuenow='".$percentage_completion."' aria-valuemin='0' aria-valuemax='100' style='width:100%'>";
+                                        echo $completed_ct . " of " . $total_ct . " completed";
+                                    echo "</div>";
                                 echo "</td>";
                                 $i++;
                                 if ($i % 4 == 0)

@@ -25,7 +25,7 @@
     }
 
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 1");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 2");
     $i = 0;
     while ($ic_row = mysqli_fetch_array($ic_res)) {
         $item_classifications[$i]['id'] = $ic_row['item_classification_id'];
@@ -56,7 +56,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     
-    <title>OBServer - Training Progress</title>
+    <title>OBServer - Access Tracking Progress</title>
     <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon">
     <link rel="icon" href="../../favicon.ico" type="image/x-icon">
 
@@ -101,7 +101,7 @@ else echo "<body>";
     <header class="headerStyle">
         <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></span> 
         <span class="glyphicon glyphicon-chevron-right headerChevron"></span>
-        <a href="./" class="subtitleHeaderStyle"> Training </a>
+        <a href="./" class="subtitleHeaderStyle"> Access </a>
     </header>
 
 

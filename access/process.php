@@ -40,11 +40,11 @@
 			// --------------------------------------------------------------------------------------------------------------------------------------------------------------
 			// 		Save a new item to the database and populate tracked items for appropriate employees
 			// ==============================================================================================================================================================
-			case 'add_training_item':
+			case 'add_access_item':
 				$item_class = $_POST['item_class'];
 				$item_class_name = $_POST['item_class_name'];
 				$item_name = $_POST['item_name'];
-				$item_url = $_POST['item_url'];
+				//$item_url = $_POST['item_url'];
 				$days_completion = $_POST['days_completion'];
 				$type = $_POST['type'];
 				$acct = $_POST['acct'];
@@ -57,8 +57,8 @@
 
 				if ($item_class == 'new') {
 					if ($type == 'team') {
-						// Create item classification for account-specific training
-						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 1, $acct, '$logo_name')";
+						// Create item classification for account-specific access
+						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, $acct, '$logo_name')";
 						if (mysqli_query($link, $qry)) {
 							$ic_id = mysqli_insert_id($link);
 							copy($logo_src, $logo_name);
@@ -68,8 +68,8 @@
 						}
 					}
 					else {
-						// Create item classification for general training
-						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 1, NULL, '$logo_name')";
+						// Create item classification for general access
+						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, NULL, '$logo_name')";
 						if (mysqli_query($link, $qry)) {
 							$ic_id = mysqli_insert_id($link);
 							copy($logo_src, $logo_name);
@@ -89,10 +89,10 @@
 					$item_id = mysqli_insert_id($link);
 					
 					// Add KMS entry link
-					if ($item_url != '')
-						mysqli_query($link, "INSERT INTO kms_training(item_id, kms_link) VALUES($item_id, '$item_url')");
+					//if ($item_url != '')
+						//mysqli_query($link, "INSERT INTO kms_training(item_id, kms_link) VALUES($item_id, '$item_url')");
 
-					// Check if General or Team-Specific Training
+					// Check if General or Team-Specific Access
 					if ($item_class = 'new' && $type == 'team') {
 						$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT a.team_id FROM account a, item_classification ic WHERE ic.account_id = a.account_id AND a.account_id = $acct"))['team_id'];
 						$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
@@ -117,22 +117,22 @@
 					}
 
 					// If user is a trainer and item is created with a new classification, add it to their responsibility
-					//var_dump(isset($_SESSION['ob_trainer_id']));
-					//var_dump($item_class);
+					/*
 					if (isset($_SESSION['ob_trainer_id']) && $item_class == 'new') {
 						$qry = "INSERT INTO trainer_responsibility(item_classification_id, trainer_id) VALUES($ic_id, ".$_SESSION['ob_trainer_id'].")";
 						//var_dump($qry);
 						mysqli_query($link, $qry);
 					}
+					*/
 				}
 				
 				echo json_encode($result);
 				break;
 
 			// --------------------------------------------------------------------------------------------------------------------------------------------------------------
-			// 		Delete a training item from database
+			// 		Delete an access item from database
 			// ==============================================================================================================================================================
-			case 'delete_training_item':
+			case 'delete_access_item':
 				$id = $_POST['id'];
 
 				if (mysqli_query($link, "DELETE FROM tracked_item WHERE item_id = $id")) {
@@ -141,7 +141,7 @@
 					mysqli_query($link, "DELETE FROM kms_training WHERE item_id = $id");
 					mysqli_query($link, "DELETE FROM item WHERE item_id = $id");
 					if ($remaining == 1) {
-						mysqli_query($link, "DELETE FROM trainer_responsibility WHERE item_classification_id = $get_classification");
+						//mysqli_query($link, "DELETE FROM trainer_responsibility WHERE item_classification_id = $get_classification");
 						mysqli_query($link, "DELETE FROM item_classification WHERE item_classification_id = $get_classification");
 					}
 					$result = 1;
@@ -168,22 +168,23 @@
 				break;
 
 			// --------------------------------------------------------------------------------------------------------------------------------------------------------------
-			// 		Save changes to an edited training item
+			// 		Save changes to an edited access item
 			// ==============================================================================================================================================================
-			case 'save_edit_training_item':
+			case 'save_edit_access_item':
 				$id = $_POST['id'];
 				$name = $_POST['name'];
-				$url = $_POST['url'];
+				//$url = $_POST['url'];
 
 				if (mysqli_query($link, "UPDATE item SET item_name = '$name' WHERE item_id = $id")) {
-					$check_if_exists_qry = "SELECT kms_training_id FROM kms_training WHERE item_id = $id";
-					$check_if_exists_res = mysqli_query($link, $check_if_exists_qry);
-					if (mysqli_num_rows($check_if_exists_res)) 
-						$kms_query = "UPDATE kms_training SET kms_link = '$url' WHERE item_id = $id";
-					else
-						$kms_query = "INSERT INTO kms_training(item_id, kms_link) VALUES($id, '$url')";
+					//$check_if_exists_qry = "SELECT kms_training_id FROM kms_training WHERE item_id = $id";
+					//$check_if_exists_res = mysqli_query($link, $check_if_exists_qry);
+					//if (mysqli_num_rows($check_if_exists_res)) 
+						//$kms_query = "UPDATE kms_training SET kms_link = '$url' WHERE item_id = $id";
+					//else
+						//$kms_query = "INSERT INTO kms_training(item_id, kms_link) VALUES($id, '$url')";
 
-					$result = mysqli_query($link, $kms_query) ? 1 : 0;
+					//$result = mysqli_query($link, $kms_query) ? 1 : 0;
+					$result = 1;
 				}
 				else 
 					$result = 0;

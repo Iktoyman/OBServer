@@ -19,10 +19,14 @@
     else $load_div = false;
 
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 1");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 2");
     while ($ic_row = mysqli_fetch_array($ic_res)) {
         $item_classifications[] = $ic_row;
     }
+
+    $first_icon_path = $item_classifications[0]['icon_path'];
+    $first_ic = substr($first_icon_path, strpos($first_icon_path, "/") + 1);
+    $first_ic = substr($first_ic, 0, strpos($first_ic, ".png"));
 ?>
 
 <head>
@@ -77,7 +81,7 @@ else echo "<body>";
     <header class="headerStyle">
         <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></span> 
         <span class="glyphicon glyphicon-chevron-right headerChevron"></span>
-        <a href="./" class="subtitleHeaderStyle"> Training </a>
+        <a href="./" class="subtitleHeaderStyle"> Access </a>
     </header>
 
 
@@ -89,7 +93,7 @@ else echo "<body>";
         <div class="row">
             <div class="col-lg-12 page-tableHeader">
                 <div class="progressHeader" id="progressHeader">
-                    <?php echo $handled_team['team_name']; ?> Training Progress
+                    <?php echo $handled_team['team_name']; ?> Accesses Progress
                 </div>
             </div>
             <div>
@@ -97,7 +101,7 @@ else echo "<body>";
                     <thead>
                         <tr>
                             <th rowspan=2 width=20% style='border-right: 1px solid black !important'> Name </th>
-                            <?php echo "<th colspan=".sizeof($item_classifications)."> Training Classification </th>"; ?>
+                            <?php echo "<th colspan=".sizeof($item_classifications)."> Access Classification </th>"; ?>
                         </tr>
                         <tr>
                         <?php
@@ -111,8 +115,9 @@ else echo "<body>";
                     <?php
                         $user_res = mysqli_query($link, "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name FROM users u WHERE u.team_id = " . $handled_team['team_id'] . " ORDER BY name");
                         while ($user_row = mysqli_fetch_array($user_res)) {
+
                             echo "<tr>"
-                            . "<td><a href='progress.php?id=genOnboard&user=" . $user_row['user_id'] . "'>" . $user_row['name'] . "</a></td>";
+                            . "<td><a href='progress.php?id=" . $first_ic . "&user=" . $user_row['user_id'] . "'>" . $user_row['name'] . "</a></td>";
                             foreach ($item_classifications as $ic) {
                                 $total_items = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(tracked_item_id) AS ct FROM tracked_item WHERE user_id = " . $user_row['user_id'] . " AND item_id IN (SELECT item_id FROM item WHERE item_classification_id = " . $ic['item_classification_id'] . ")"))['ct'];
                                 if ($total_items) {

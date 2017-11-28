@@ -1,0 +1,43 @@
+.add-user-table {
+	margin: 5% auto;
+	width: 50%;
+	border: 2px solid rgb(255, 204, 0);
+}
+
+.add-user-table th {
+	padding: 1vw;
+	text-align: center;
+	background-color: rgb(255, 204, 0);
+}
+
+.add-user-table td{
+	padding: 0.75vw;
+	font-size: 0.9vw;
+}
+
+.add-user-table input {
+	width: 95%;
+	padding: 0.1vw;
+	font-size: 0.75vw;
+	line-height: 150%;
+}
+
+.add-user-table select {
+	width: 45%;
+	padding: 0.1vw;
+	font-size: 0.75vw;
+	line-height: 150%;
+}
+
+#hire_date, #team_start {
+	width: 45%;
+}
+
+i.glyphicon {
+	top: 3px !important;
+}
+
+#save-user-btn {
+	cursor: pointer;
+	font-weight: bold;
+}

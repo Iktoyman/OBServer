@@ -130,6 +130,7 @@
 
 .headerStyle{
     background-color: Black;
+    border-bottom: 1px solid white;
 }
 
 .titleHeaderStyle{

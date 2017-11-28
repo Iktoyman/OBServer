@@ -13,15 +13,15 @@
             <h4> Trainings </h4>
         </li>
         <li>
-            <a href="./">Dashboard</a>
+            <a href="../training/">Dashboard</a>
         </li>
         <li>
-            <?php echo "<a href='training_list.php?team=".$handled_team['team_id']."'>Training List</a>"; ?>
+            <?php echo "<a href='../training/training_list.php?team=".$handled_team['team_id']."'>Training List</a>"; ?>
         </li>
         <?php
         if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {
         echo '<li>'
-            . '<a href="manager_view.php">Manager View</a>'
+            . '<a href="../training/manager_view.php">Manager View</a>'
             . '</li>';
         }
         ?>
@@ -30,16 +30,16 @@
             <h4> Accesses </h4>
         </li>
         <li>
-            <a href="../access/">Dashboard</a>
+            <a href="./">Dashboard</a>
         </li>
         <li>
-            <?php echo "<a href='../access/access_list.php?team=".$handled_team['team_id']."'>Access List</a>"; ?>
+            <?php echo "<a href='access_list.php?team=" . $handled_team['team_id'] . "'>Access List</a>"; ?>
         </li>
         <?php
         if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {
         echo '<li>'
-            . '<a href="../access/manager_view.php">Manager View</a>'
-            . '</li>';
+            . '<a href="manager_view.php">Manager View</a>'
+        . '</li>';
         }
         ?>
         <hr>
