@@ -42,6 +42,11 @@ $(document).ready(function() {
 		$(this).parent().css('display', 'none');
 		$('.edit-date-btn').css('visibility', 'visible');
 	});
+
+	$('#team_select').on('change', function() {
+		if ($(this).val())
+			window.location.href = 'manager_view.php?team=' + $(this).val();
+	});
 });	
 
 function item_class_mo(id) {
@@ -53,6 +58,7 @@ function item_class_moh(id) {
 }
 
 function show_class(id) {
+	current_div = id.substring(0, id.length - 3);
 	var item_class_num = item_classes.length;
 	for (var a = 0; a < item_class_num; a++) {
 		if (item_classes[a]['element_id'] != id)
@@ -73,50 +79,78 @@ function show_class(id) {
 }
 
 function markAsComplete(id, item) {
-	var parent_div_id = $('#' + id).parent().parent().parent().parent().parent().parent().attr('id');
-	var len = parent_div_id.length - 3;
+	var item_ids = [];
+	if ($('.progress-selection-checkbox').is(':checked')) {
+		$('.progress-selection-checkbox:checked').each(function() {
+			var item_id = $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1);
+			item_ids.push(item_id);
+		});
+	}
+	else {
+		var item_id = id.substring(id.indexOf('w') + 1);
+		item_ids.push(item_id);
+	}
+	console.log(item_ids);
 
-	$.ajax({
-		type: "POST",
-		url: 'process.php',
-		data: {
-			action: 'mark_complete',
-			id: item
-		},
-		dataType: 'json'
-	})
-	.done(function(data) {
-		if (data['result']) {
-			alert("Item marked as completed!");
-			window.location.reload();
-		}
-		else {
-			alert("Error!");
-		}
-	});
+	if (confirm("Are you sure you wish to mark " + item_ids.length + " item(s) as Completed?\n\rDouble check your selection if selecting multiple items.")) {
+		$.ajax({
+			type: "POST",
+			url: 'process.php',
+			data: {
+				action: 'mark_complete',
+				item_ids: item_ids
+			},
+			dataType: 'json'
+		})
+		.done(function(data) {
+			if (data) {
+				alert("Item(s) marked as completed!");
+				if (manager_view)
+					window.location.href = 'progress.php?id=' + current_div + '&user=' + current_user;
+				else
+					window.location.href = 'progress.php?id=' + current_div;
+			}
+			else {
+				alert("Error!");
+			}
+		});
+	}
 }
 
 function markAsNotApplicable(id) {
-	var item_id = id.substring(id.indexOf('w') + 1);
+	var item_ids = [];
+	if ($('.progress-selection-checkbox').is(':checked')) {
+		$('.progress-selection-checkbox:checked').each(function() {
+			var item_id = $(this).attr('id').substring($(this).attr('id').indexOf('_') + 1);
+			item_ids.push(item_id);
+		});
+	}
+	else {
+		var item_id = id.substring(id.indexOf('w') + 1);
+		item_ids.push(item_id);
+	}
+	console.log(item_ids);
 
-	$.ajax({
-		type: "POST",
-		url: "process.php",
-		data: {
-			action: 'mark_notapplicable',
-			id: item_id
-		},
-		dataType: 'json'
-	})
-	.done(function(data) {
-		if (data) {
-			alert("Item marked as not applicable!");
-			window.location.reload();
-		}
-		else {
-			alert("Error!");
-		}
-	});
+	if (confirm("Are you sure you wish to mark " + item_ids.length + " item(s) as Not Applicable?\n\rDouble-check your selection if selecting multiple items.")) {
+		$.ajax({
+			type: "POST",
+			url: "process.php",
+			data: {
+				action: 'mark_notapplicable',
+				item_ids: item_ids
+			},
+			dataType: 'json'
+		})
+		.done(function(data) {
+			if (data) {
+				alert("Item(s) marked as not applicable!");
+				window.location.reload();
+			}
+			else {
+				alert("Error!");
+			}
+		});
+	}
 }
 
 function editCompletionDate(id) {

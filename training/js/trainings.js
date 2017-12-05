@@ -1,6 +1,6 @@
 var edit_span_buffer = "";
 var url_buffer = "";
-var check_kms = false;
+var check_kms = true;
 
 $(document).ready(function() {
 	$('[data-toggle="tooltip"]').tooltip();
@@ -56,6 +56,10 @@ $(document).ready(function() {
 		}
 		else if (!checkIfComplete()) {
 			alert("All the fields are required and must have valid values!");
+		}
+		else {
+			console.log(checkIfComplete());
+			console.log(check_kms);
 		}
 	});
 
@@ -117,6 +121,11 @@ $(document).ready(function() {
 		if (e.keyCode === 13) {
 			saveClassName($(this).attr('id'));
 		}
+	});
+
+	$('#training_list_select').on('change', function() {
+		if ($(this).val())
+			window.location.href = 'training_list.php?team=' + $(this).val();
 	});
 });
 
@@ -200,9 +209,12 @@ function saveItem() {
 			dataType: 'json'
 		})
 		.done(function(data) {
-			if (data) {
+			if (data == 1) {
 				alert("Item added successfully!");
 				window.location.reload();
+			}
+			else if (data == 2) {
+				alert("Filename already exists! Use another filename for the logo.");
 			}
 			else {
 				alert("Error. Item not saved, try again.\n\rAvoid using single quotes(') or double quotes(\") in the training name.");

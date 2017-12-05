@@ -55,75 +55,79 @@
 
 				$result = 0;
 
-				if ($item_class == 'new') {
-					if ($type == 'team') {
-						// Create item classification for account-specific access
-						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, $acct, '$logo_name')";
-						if (mysqli_query($link, $qry)) {
-							$ic_id = mysqli_insert_id($link);
-							copy($logo_src, $logo_name);
-							copy($logo_src_hover, $logo_hover);
-							if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
-								$result = 1;
+				if (file_exists($logo_name))
+					$result = 2;
+				else {
+					if ($item_class == 'new') {
+						if ($type == 'team') {
+							// Create item classification for account-specific access
+							$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, $acct, '$logo_name')";
+							if (mysqli_query($link, $qry)) {
+								$ic_id = mysqli_insert_id($link);
+								copy($logo_src, $logo_name);
+								copy($logo_src_hover, $logo_hover);
+								if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
+									$result = 1;
+							}
+						}
+						else {
+							// Create item classification for general access
+							$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, NULL, '$logo_name')";
+							if (mysqli_query($link, $qry)) {
+								$ic_id = mysqli_insert_id($link);
+								copy($logo_src, $logo_name);
+								copy($logo_src_hover, $logo_hover);
+								if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
+									$result = 1;
+							}
 						}
 					}
 					else {
-						// Create item classification for general access
-						$qry = "INSERT INTO item_classification(item_classification_name, type_id, account_id, icon_path) VALUES('$item_class_name', 2, NULL, '$logo_name')";
-						if (mysqli_query($link, $qry)) {
-							$ic_id = mysqli_insert_id($link);
-							copy($logo_src, $logo_name);
-							copy($logo_src_hover, $logo_hover);
-							if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
-								$result = 1;
-						}
+						$qry = "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($item_class, '$item_name', $days_completion)";
+						if (mysqli_query($link, $qry))
+							$result = 1;
 					}
-				}
-				else {
-					$qry = "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($item_class, '$item_name', $days_completion)";
-					if (mysqli_query($link, $qry))
-						$result = 1;
-				}
 
-				if ($result) {
-					$item_id = mysqli_insert_id($link);
-					
-					// Add KMS entry link
-					//if ($item_url != '')
-						//mysqli_query($link, "INSERT INTO kms_training(item_id, kms_link) VALUES($item_id, '$item_url')");
+					if ($result) {
+						$item_id = mysqli_insert_id($link);
+						
+						// Add KMS entry link
+						//if ($item_url != '')
+							//mysqli_query($link, "INSERT INTO kms_training(item_id, kms_link) VALUES($item_id, '$item_url')");
 
-					// Check if General or Team-Specific Access
-					if ($item_class = 'new' && $type == 'team') {
-						$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT a.team_id FROM account a, item_classification ic WHERE ic.account_id = a.account_id AND a.account_id = $acct"))['team_id'];
-						$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
-					}
-					else if ($item_class = 'new' && $type == 'gen') {
-						$users = mysqli_query($link, "SELECT user_id FROM users");
-					}
-					else if ($item_class != 'new') {
-						$acct_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT ic.account_id FROM item_classification ic, item i WHERE i.item_classification_id = ic.item_classification_id AND i.item_id = $item_id"))['account_id'];
-						if ($acct_id == NULL) {
-							$users = mysqli_query($link, "SELECT user_id FROM users");
-						}
-						else {
-							$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_id FROM account WHERE account_id = $acct_id"))['team_id'];
+						// Check if General or Team-Specific Access
+						if ($item_class = 'new' && $type == 'team') {
+							$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT a.team_id FROM account a, item_classification ic WHERE ic.account_id = a.account_id AND a.account_id = $acct"))['team_id'];
 							$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
 						}
-					}
+						else if ($item_class = 'new' && $type == 'gen') {
+							$users = mysqli_query($link, "SELECT user_id FROM users");
+						}
+						else if ($item_class != 'new') {
+							$acct_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT ic.account_id FROM item_classification ic, item i WHERE i.item_classification_id = ic.item_classification_id AND i.item_id = $item_id"))['account_id'];
+							if ($acct_id == NULL) {
+								$users = mysqli_query($link, "SELECT user_id FROM users");
+							}
+							else {
+								$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_id FROM account WHERE account_id = $acct_id"))['team_id'];
+								$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
+							}
+						}
 
-					while ($user = mysqli_fetch_array($users)) {
-						$qry = "INSERT INTO tracked_item(user_id, item_id, status) VALUES(".$user['user_id'].", $item_id, 'Pending')";
-						mysqli_query($link, $qry);
-					}
+						while ($user = mysqli_fetch_array($users)) {
+							$qry = "INSERT INTO tracked_item(user_id, item_id, status) VALUES(".$user['user_id'].", $item_id, 'Pending')";
+							mysqli_query($link, $qry);
+						}
 
-					// If user is a trainer and item is created with a new classification, add it to their responsibility
-					/*
-					if (isset($_SESSION['ob_trainer_id']) && $item_class == 'new') {
-						$qry = "INSERT INTO trainer_responsibility(item_classification_id, trainer_id) VALUES($ic_id, ".$_SESSION['ob_trainer_id'].")";
-						//var_dump($qry);
-						mysqli_query($link, $qry);
+						// If user is a trainer and item is created with a new classification, add it to their responsibility
+						/*
+						if (isset($_SESSION['ob_trainer_id']) && $item_class == 'new') {
+							$qry = "INSERT INTO trainer_responsibility(item_classification_id, trainer_id) VALUES($ic_id, ".$_SESSION['ob_trainer_id'].")";
+							//var_dump($qry);
+							mysqli_query($link, $qry);
+						}
+						*/
 					}
-					*/
 				}
 				
 				echo json_encode($result);

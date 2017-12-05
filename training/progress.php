@@ -6,26 +6,20 @@
     session_start();
     require "establish_user.php";
 
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
-
     if (isset($_GET['user'])) {
+        $manager_view = 1;
         $user_id = $_GET['user'];
         $emp_name = mysqli_fetch_assoc(mysqli_query($link, "SELECT CONCAT(first_name, ' ', last_name) AS name FROM users WHERE user_id = " . $user_id))['name'];
     }
     else {
+        $manager_view = 0;
         $user_id = $_SESSION['ob_uid'];
     }
 
+    $team = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_id FROM users WHERE user_id = $user_id"))['team_id'];
+
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 1");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 1");
     $i = 0;
     while ($ic_row = mysqli_fetch_array($ic_res)) {
         $item_classifications[$i]['id'] = $ic_row['item_classification_id'];
@@ -82,6 +76,9 @@
     <script type="text/javascript" src="js/datepicker.min.js"></script>
 
     <script>
+        var current_div = '<?php echo $_GET['id']; ?>';
+        var manager_view = <?php echo $manager_view; ?>;
+        var current_user = <?php echo $user_id; ?>;
         var item_classes = <?php echo json_encode($item_classifications); ?>;
     </script>
 
@@ -125,7 +122,7 @@ else echo "<body>";
                 ?>
             </div>
             <div class="col-lg-12">
-                <div>
+                <div style='overflow: auto;'>
                     <center>
                         <table>
                             <tr>
@@ -154,7 +151,8 @@ else echo "<body>";
                             . "<table class='GeneratedTable'>"
                                 . "<thead>"
                                     . "<tr>"
-                                        . "<th width=70%>Title</th>"
+                                        . "<th width=3%></th>"
+                                        . "<th width=67%>Title</th>"
                                         . "<th width=30% colspan=2>Status</th>"
                                     . "</tr>"
                                 . "</thead>"
@@ -162,7 +160,12 @@ else echo "<body>";
                                 $item_res = mysqli_query($link, "SELECT ti.tracked_item_id, i.item_name, ti.completion_date, ti.status FROM tracked_item ti, item i WHERE ti.item_id = i.item_id AND ti.user_id = " . $user_id . " AND i.item_classification_id = " . $ic['id']);
                                 while ($item_row = mysqli_fetch_array($item_res)) {
                                     echo "<tr>";
+                                        echo "<td>";
+                                        if ($item_row['status'] != 'Completed')
+                                            echo "<input type='checkbox' class='progress-selection-checkbox' id='ps-chkbox_" . $item_row['tracked_item_id'] . "' />";
+                                        echo "</td>";
                                         echo "<td>" . $item_row['item_name'] . "</td>";
+                                        
                                         if ($item_row['status'] == 'Completed') {
                                             echo "<td colspan=2>" . $item_row['status'] . " on " . date('M j, Y', strtotime($item_row['completion_date']));
                                             if (isset($_SESSION['ob_manager_id']) || (isset($_SESSION['ob_trainer_id']) && in_array($ic['id'], explode(',', $_SESSION['ob_trainer_items']))) || $_SESSION['ob_uid'] == $user_id) {
@@ -178,7 +181,11 @@ else echo "<body>";
                                             . "</td>";
                                         }
                                         else if ($item_row['status'] == 'N/A')
-                                            echo "<td colspan=2>" . $item_row['status'] . "</td>";
+                                            echo "<td colspan=2>" . $item_row['status'] ."&nbsp;&nbsp;"
+                                                . "<a class='progress-btn' style='float: right' id='item_row".$item_row['tracked_item_id']."' onclick='markAsComplete(this.id, ".$item_row['tracked_item_id'].")'>"
+                                                . "<span class='progress-btn-span glyphicon glyphicon-ok' data-toggle='tooltip' data-placement='top' title='Mark this item as Completed'></span>"
+                                                . "</a>"
+                                                ."</td>";
                                         else {
                                             if (isset($_SESSION['ob_manager_id']) || (isset($_SESSION['ob_trainer_id']) && in_array($ic['id'], explode(',', $_SESSION['ob_trainer_items']))) || $_SESSION['ob_uid'] == $user_id) {
                                                 echo "<td>" . $item_row['status'] . "</td>";

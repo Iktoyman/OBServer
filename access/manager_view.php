@@ -4,29 +4,6 @@
     require "connect.php";
     require "../../connect.php";
     session_start();
-
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
-
-    if (isset($_GET['id'])) $load_div = true;
-    else $load_div = false;
-
-    $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 2");
-    while ($ic_row = mysqli_fetch_array($ic_res)) {
-        $item_classifications[] = $ic_row;
-    }
-
-    $first_icon_path = $item_classifications[0]['icon_path'];
-    $first_ic = substr($first_icon_path, strpos($first_icon_path, "/") + 1);
-    $first_ic = substr($first_ic, 0, strpos($first_ic, ".png"));
 ?>
 
 <head>
@@ -61,10 +38,6 @@
     <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
     <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 
-    <script>
-    console.log(<?php echo json_encode($handled_team['team_id']); ?>);
-    </script>
-
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -74,10 +47,7 @@
 
 </head>
 
-<?php
-if ($load_div) echo "<body onload=show_class('".$_GET['id']."Div')>";
-else echo "<body>";
-?>
+<body>
     <header class="headerStyle">
         <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></span> 
         <span class="glyphicon glyphicon-chevron-right headerChevron"></span>
@@ -87,13 +57,49 @@ else echo "<body>";
 
     <div id="wrapper">
     <?php
-        require "sidebar.php";        
+        require "sidebar.php";
+
+        if (isset($_GET['team'])) {
+            $team = $_GET['team'];
+            foreach ($handled_teams as $handled_team) {
+                if ($handled_team['team_id'] == $_GET['team']) {
+                    $team_name = $handled_team['team_name'];
+                    break;
+                }
+            }
+        }
+        else {
+            $team = $handled_teams[0]['team_id'];
+            $team_name = $handled_teams[0]['team_name'];
+        }
+
+        $item_classifications = array();
+        $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 2");
+        while ($ic_row = mysqli_fetch_array($ic_res)) {
+            $item_classifications[] = $ic_row;
+        }                
+
+        if (sizeof($item_classifications) > 0) {
+            $first_icon_path = $item_classifications[0]['icon_path'];
+            $first_ic = substr($first_icon_path, strpos($first_icon_path, "/") + 1);
+            $first_ic = substr($first_ic, 0, strpos($first_ic, ".png"));
+        }
     ?>
         <!-- Page Content -->
         <div class="row">
             <div class="col-lg-12 page-tableHeader">
                 <div class="progressHeader" id="progressHeader">
-                    <?php echo $handled_team['team_name']; ?> Accesses Progress
+                    <?php 
+                        echo "$team_name Accesses Progress <br>";
+                        if (sizeof($handled_teams) > 1) {
+                            echo "<select id='team_select'>";
+                                echo "<option value=0> -- Select Team -- </option>"; 
+                                foreach ($handled_teams as $handled_team) {
+                                    echo "<option value=" . $handled_team['team_id'] . ">" . $handled_team['team_name'] . "</option>";
+                                }
+                            echo "</select>";
+                        }
+                    ?>
                 </div>
             </div>
             <div>
@@ -113,20 +119,25 @@ else echo "<body>";
                     </thead>
                     <tbody>
                     <?php
-                        $user_res = mysqli_query($link, "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name FROM users u WHERE u.team_id = " . $handled_team['team_id'] . " ORDER BY name");
+                        $user_res = mysqli_query($link, "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name FROM users u WHERE u.team_id = $team ORDER BY name");
                         while ($user_row = mysqli_fetch_array($user_res)) {
 
-                            echo "<tr>"
-                            . "<td><a href='progress.php?id=" . $first_ic . "&user=" . $user_row['user_id'] . "'>" . $user_row['name'] . "</a></td>";
-                            foreach ($item_classifications as $ic) {
-                                $total_items = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(tracked_item_id) AS ct FROM tracked_item WHERE user_id = " . $user_row['user_id'] . " AND item_id IN (SELECT item_id FROM item WHERE item_classification_id = " . $ic['item_classification_id'] . ")"))['ct'];
-                                if ($total_items) {
-                                    $num_completed = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(tracked_item_id) AS ct FROM tracked_item WHERE user_id = " . $user_row['user_id'] . " AND item_id IN (SELECT item_id FROM item WHERE item_classification_id = " . $ic['item_classification_id'] . " AND (status = 'Completed' OR status = 'N/A'))"))['ct'];
-                                    echo "<td>" . round(($num_completed/$total_items) * 100) . "%</td>";
+                            echo "<tr>";
+                            if (sizeof($item_classifications) > 0) {
+                                echo "<td><a href='progress.php?id=" . $first_ic . "&user=" . $user_row['user_id'] . "'>" . $user_row['name'] . "</a></td>";
+                                foreach ($item_classifications as $ic) {
+                                    $total_items = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(tracked_item_id) AS ct FROM tracked_item WHERE user_id = " . $user_row['user_id'] . " AND item_id IN (SELECT item_id FROM item WHERE item_classification_id = " . $ic['item_classification_id'] . ")"))['ct'];
+                                    if ($total_items) {
+                                        $num_completed = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(tracked_item_id) AS ct FROM tracked_item WHERE user_id = " . $user_row['user_id'] . " AND item_id IN (SELECT item_id FROM item WHERE item_classification_id = " . $ic['item_classification_id'] . " AND (status = 'Completed' OR status = 'N/A'))"))['ct'];
+                                        echo "<td>" . round(($num_completed/$total_items) * 100) . "%</td>";
+                                    }
+                                    else 
+                                        echo "<td> N/A </td>";
                                 }
-                                else 
-                                    echo "<td> N/A </td>";
-
+                            }
+                            else {
+                                echo "<td>" . $user_row['name'] . "</td>"
+                                . "<td> No accesses being tracked yet </td>";
                             }
                             echo "<tr>";
                         }

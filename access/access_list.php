@@ -6,16 +6,6 @@
     session_start();
     require "establish_user.php";
 
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
-
     $team = $_GET['team'];
     // Get accounts under team
     $accounts = array();
@@ -26,7 +16,7 @@
     $team_name = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_name FROM team WHERE team_id = $team"))['team_name'];
 
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 2");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 2 ORDER BY item_classification_name");
     while ($ic_row = mysqli_fetch_array($ic_res))
         $item_classifications[] = $ic_row;
 
@@ -90,17 +80,31 @@
         <div class="row">
             <div class="col-lg-12 page-tableHeader">
                 <div class="progressHeader" id="progressHeader">
-                    <?php echo $team_name; ?> Access List
+                    <?php 
+                        echo "$team_name Access List <br>";
+                        if (sizeof($handled_teams) > 1) {
+                            echo "<select id='access_list_select'>";
+                                echo "<option value=0> -- Select Team -- </option>"; 
+                                foreach ($handled_teams as $handled_team) {
+                                    echo "<option value=" . $handled_team['team_id'] . ">" . $handled_team['team_name'] . "</option>";
+                                }
+                            echo "</select>";
+                        }
+                    ?>
                 </div>
             </div>
             <div>
-                <div class='add-selection-list-div'>
-                    <ul class='add-selection-list'>
-                        <li><a class='add-item-btn' id='itemclass_'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under existing Classification </a></li>
-                        <li><a class='edit-all-items' id='edit-all-items'><span class='glyphicon glyphicon-pencil'></span>&nbsp; Toggle Edit Items </a></li>
-                        <li><a class='add-item-btn' id='itemclass_new'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under New Classification </a></li>
-                    </ul>
-                </div>
+                <?php
+                if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {      
+                    echo "<div class='add-selection-list-div'>"
+                        . "<ul class='add-selection-list'>"
+                            . "<li><a class='add-item-btn' id='itemclass_'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under existing Classification </a></li>"
+                            . "<li><a class='edit-all-items' id='edit-all-items'><span class='glyphicon glyphicon-pencil'></span>&nbsp; Toggle Edit Items </a></li>"
+                            . "<li><a class='add-item-btn' id='itemclass_new'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under New Classification </a></li>"
+                        . "</ul>"
+                    . "</div>";
+                }
+                ?>
                 <table class='GeneratedTable employee-progress-table'>
                     <thead>
                         <tr>

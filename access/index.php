@@ -42,16 +42,7 @@
     require "../../connect.php";
     session_start();
     require "establish_user.php";
-
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
+    
 ?>
     <header class="headerStyle">
         <a href="#menu-toggle" class="titleHeaderStyle" id="menu-toggle">&#9776;</a> &nbsp; <span class="titleHeaderstyle"><a href="../" class="titleHeaderStyle">OBserver</a></span>

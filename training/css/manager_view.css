@@ -3,12 +3,41 @@
 	padding-bottom: 0.5%;
 }
 
-.employee-progress-table {
-	max-width: 90%;
+.table-container-div {
+	height: 600px;
+	width: 90%;
 	margin: 0 auto;
+	overflow: auto;
+	border-bottom: 2px solid rgb(255, 204, 0);
+}
+
+.employee-progress-table {
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+.employee-progress-table tbody th {
+	text-align: left;
+}
+
+.GeneratedTable.employee-progress-table {
+	width: 100% !important;
 }
 
 .employee-progress-table th {
 	text-align: center;
 	padding: 1%;
+	font-size: 0.6vw;
+}
+
+.employee-progress-table thead td {
+	font-size: 0.55vw;
+	text-align: center;
+	border: 1px solid #ccc;
+}
+
+#team_select {
+	font-size: 0.8vw;
+	padding: 0.3vw;
+	width: 20%;
 }

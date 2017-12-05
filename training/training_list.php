@@ -6,16 +6,6 @@
     session_start();
     require "establish_user.php";
 
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
-
     $team = $_GET['team'];
     // Get accounts under team
     $accounts = array();
@@ -26,7 +16,7 @@
     $team_name = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_name FROM team WHERE team_id = $team"))['team_name'];
 
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 1");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 1 ORDER BY item_classification_name");
     while ($ic_row = mysqli_fetch_array($ic_res))
         $item_classifications[] = $ic_row;
 
@@ -40,7 +30,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
     
-    <title>Simple Sidebar - Start Bootstrap Template</title>
+    <title>OBServer - Trainings List</title>
     <link rel="shortcut icon" href="../../favicon.ico" type="image/x-icon">
     <link rel="icon" href="../../favicon.ico" type="image/x-icon">
 
@@ -90,17 +80,31 @@
         <div class="row">
             <div class="col-lg-12 page-tableHeader">
                 <div class="progressHeader" id="progressHeader">
-                    <?php echo $team_name; ?> Training List
+                    <?php 
+                        echo "$team_name Training List <br>";
+                        if (sizeof($handled_teams) > 1) {
+                            echo "<select id='training_list_select'>";
+                                echo "<option value=0> -- Select Team -- </option>"; 
+                                foreach ($handled_teams as $handled_team) {
+                                    echo "<option value=" . $handled_team['team_id'] . ">" . $handled_team['team_name'] . "</option>";
+                                }
+                            echo "</select>";
+                        }
+                    ?>
                 </div>
             </div>
             <div>
-                <div class='add-selection-list-div'>
-                    <ul class='add-selection-list'>
-                        <li><a class='add-item-btn' id='itemclass_'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under existing Classification </a></li>
-                        <li><a class='edit-all-items' id='edit-all-items'><span class='glyphicon glyphicon-pencil'></span>&nbsp; Toggle Edit Items </a></li>
-                        <li><a class='add-item-btn' id='itemclass_new'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under New Classification </a></li>
-                    </ul>
-                </div>
+                <?php
+                if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {  
+                    echo "<div class='add-selection-list-div'>"
+                        . "<ul class='add-selection-list'>"
+                            . "<li><a class='add-item-btn' id='itemclass_'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under existing Classification </a></li>"
+                            . "<li><a class='edit-all-items' id='edit-all-items'><span class='glyphicon glyphicon-pencil'></span>&nbsp; Toggle Edit Items </a></li>"
+                            . "<li><a class='add-item-btn' id='itemclass_new'><span class='glyphicon glyphicon-plus'></span>&nbsp; Add New Item under New Classification </a></li>"
+                        . "</ul>"
+                    . "</div>";
+                }
+                ?>
                 <table class='GeneratedTable employee-progress-table'>
                     <thead>
                         <tr>
@@ -260,7 +264,7 @@
                                 <input type='radio' name='class_logo' id='class_logo' value='img/techTraining.png'> <img src='img/techTraining.png' width=64px> </input>
                                 <br><br><br>
                                 <input type='radio' name='class_logo' id='class_logo' value='img/nestleExams.png'> <img src='img/nestleExams.png' width=64px> </input>
-                                <input type='radio' name='class_logo' id='class_logo' value='img/nestleOnboard.png'> <img src='img/nestleOnboard.png' width=64px> </input>
+                                <input type='radio' name='class_logo' id='class_logo' value='img/nestleSpecTrain.png'> <img src='img/nestleSpecTrain.png' width=64px> </input>
                                 <input type='radio' name='class_logo' id='class_logo' value='img/name.png'> <img src='img/name.png' width=64px> </input>
                                 <input type='radio' name='class_logo' id='class_logo' value='img/team.png'> <img src='img/team.png' width=64px> </input>
                             </ul>

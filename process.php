@@ -1,135 +1,110 @@
 <?php
+	$conn = mysqli_connect("localhost", "root", "admin", "skms");
 	require "connect.php";
 	session_start();
 
 	if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action'])) {
-		if ($_POST['action'] == 'mark_complete') {
-			$ar = array();
-			$id = $_POST['id'];
+		switch ($_POST['action']) {
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			//	Add Employee
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			case 'add_user':
+				$inputs = $_POST['inputs'];
+				$team = $_POST['team'];
 
-			$qry = "UPDATE tracked_item SET status = 'Completed', completion_date = NOW() WHERE tracked_item_id = " . $id;
-			if (mysqli_query($link, $qry)) {
-				$get_dets = mysqli_query($link, "SELECT i.item_name, ti.status FROM item i, tracked_item ti WHERE ti.item_id = i.item_id AND ti.tracked_item_id = " . $id);
-				$ar = mysqli_fetch_array($get_dets);
-				$ar['result'] = 1;
-			}
-			else {
-				$ar['result'] = 0;
-			}
-
-			echo json_encode($ar);
-		}
-		else if ($_POST['action'] == 'add_training_item') {
-			$item_class = $_POST['item_class'];
-			$item_class_name = $_POST['item_class_name'];
-			$item_name = $_POST['item_name'];
-			$days_completion = $_POST['days_completion'];
-			$type = $_POST['type'];
-			$acct = $_POST['acct'];
-			$logo_src = $_POST['logo_src'];
-			$logo_src_hover = $_POST['logo_src_hover'];
-			$logo_name = $_POST['logo_name'];
-			$logo_hover = $_POST['logo_hover'];
-
-			$result = 0;
-
-			if ($item_class == 'new') {
-				if ($type == 'team') {
-					// Create item classification for account-specific training
-					$qry = "INSERT INTO item_classification(item_classification_name, account_id, icon_path) VALUES('$item_class_name', $acct, '$logo_name')";
-					if (mysqli_query($link, $qry)) {
-						$ic_id = mysqli_insert_id($link);
-						copy($logo_src, $logo_name);
-						copy($logo_src_hover, $logo_hover);
-						if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
-							$result = 1;
-					}
+				$check_if_user_exists = mysqli_query($conn, "SELECT username FROM users WHERE username = '" . $inputs[2] . "'");
+				if (mysqli_num_rows($check_if_user_exists)) {
+					$check_in_observer = mysqli_query($link, "SELECT user_id FROM users WHERE username = '" . $inputs[2] . "'");
+					if (mysqli_num_rows($check_in_observer))
+						$result = 2;
+					else
+						$result = 1;
 				}
 				else {
-					// Create item classification for general training
-					$qry = "INSERT INTO item_classification(item_classification_name, account_id, icon_path) VALUES('$item_class_name', NULL, '$logo_name')";
-					if (mysqli_query($link, $qry)) {
-						$ic_id = mysqli_insert_id($link);
-						copy($logo_src, $logo_name);
-						copy($logo_src_hover, $logo_hover);
-						if (mysqli_query($link, "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($ic_id, '$item_name', $days_completion)"))
-							$result = 1;
+					// Try to check LDAP if email is valid and existing
+
+					// Add User to KMS user DB
+					if (mysqli_query($conn, "INSERT INTO users(username, first_name, last_name) VALUES('" . $inputs[2] . "', '" . $inputs[0] . "', '" . $inputs[1] . "')")) {
+						// Assign User to KMS Team
+						# if Nestle	
+						if ($team == 4 || $team == 5)
+							$kms_team = 5;
+						# if Platforms
+						else if ($team == 7)					
+							$kms_team = 11;
+						# if Mainframe
+						else if ($team == 8)
+							$kms_team = 15;
+						# SAT1-3 or Backup team
+						else
+							$kms_team = $team;
+
+						mysqli_query($conn, "INSERT INTO user_team_grouping(user_group_id, username) VALUES($kms_team, '" . $inputs[2] . "')");
+						$result = 1;
 					}
+					else
+						$result = 0;
 				}
-			}
-			else {
-				$qry = "INSERT INTO item(item_classification_id, item_name, days_before_completion) VALUES($item_class, '$item_name', $days_completion)";
-				if (mysqli_query($link, $qry))
-					$result = 1;
-			}
 
-			if ($result) {
-				$item_id = mysqli_insert_id($link);
+				if ($result == 1) {
+					// Add user to OBServer user DB
+					if (mysqli_query($link, "INSERT INTO users(username, first_name, last_name, hire_date, team_id, team_join_date) VALUES('" . $inputs[2] . "', '" . $inputs[0] . "', '" . $inputs[1] . "', '" . $inputs[3] . "', $team, '" . $inputs[4] . "')")) {
+						// Populate user's tracked items according to team
+						$user_id = mysqli_insert_id($link);
+	          $res = mysqli_query($link, "SELECT item_classification_id FROM item_classification WHERE account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL");
+	          while ($row = mysqli_fetch_array($res)) {
+	            $res2 = mysqli_query($link, "SELECT item_id, item_name FROM item WHERE item_classification_id = " . $row['item_classification_id']);
+	            while ($row2 = mysqli_fetch_array($res2)) {
+	              mysqli_query($link, "INSERT INTO tracked_item (user_id, item_id, start_date, status) VALUES($user_id, " . $row2['item_id'] . ", NOW(), 'Pending')");
+	            }
+	          }
 
-				// Check if General or Team-Specific Training
-				if ($item_class = 'new' && $type == 'team') {
-					$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT a.team_id FROM account a, item_classification ic WHERE ic.account_id = a.account_id AND a.account_id = $acct"))['team_id'];
-					$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
-				}
-				else if ($item_class = 'new' && $type == 'gen') {
-					$users = mysqli_query($link, "SELECT user_id FROM users");
-				}
-				else if ($item_class != 'new') {
-					$acct_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT ic.account_id FROM item_classification ic, item i WHERE i.item_classification_id = ic.item_classification_id AND i.item_id = $item_id"))['account_id'];
-					if ($acct_id == NULL) {
-						$users = mysqli_query($link, "SELECT user_id FROM users");
+						$result = 1;
 					}
-					else {
-						$team_id = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_id FROM account WHERE account_id = $acct_id"))['team_id'];
-						$users = mysqli_query($link, "SELECT user_id FROM users WHERE team_id = $team_id");
-					}
+					else
+						$result = 0;
 				}
 
-				while ($user = mysqli_fetch_array($users)) {
-					$qry = "INSERT INTO tracked_item(user_id, item_id, status) VALUES(".$user['user_id'].", $item_id, 'Pending')";
-					mysqli_query($link, $qry);
-				}
+				echo json_encode($result);
+				break;
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			//	Team select dropdown
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			case 'change_team':
+				$team = $_POST['team'];
+				$users = array();
 
-				// If user is a trainer and item is created with a new classification, add it to their responsibility
-				//var_dump(isset($_SESSION['ob_trainer_id']));
-				//var_dump($item_class);
-				if (isset($_SESSION['ob_trainer_id']) && $item_class == 'new') {
-					$qry = "INSERT INTO trainer_responsibility(item_classification_id, trainer_id) VALUES($ic_id, ".$_SESSION['ob_trainer_id'].")";
-					//var_dump($qry);
-					mysqli_query($link, $qry);
-				}
-			}
-			
-			echo json_encode($result);
-		}
-		else if ($_POST['action'] == 'delete_training_item') {
-			$id = $_POST['id'];
+				if ($team)
+					$qry = "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name, t.team_name FROM users u, team t WHERE u.team_id = t.team_id AND u.team_id = $team ORDER BY u.last_name";
+				else
+					$qry = "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name, t.team_name FROM users u, team t WHERE u.team_id = t.team_id ORDER BY u.team_id, u.last_name";
+				$res = mysqli_query($link, $qry);
+				while ($row = mysqli_fetch_array($res))
+					$users[] = $row;
 
-			if (mysqli_query($link, "DELETE FROM tracked_item WHERE item_id = $id")) {
-				$get_classification = mysqli_fetch_assoc(mysqli_query($link, "SELECT item_classification_id FROM item WHERE item_id = $id"))['item_classification_id'];
-				$remaining = mysqli_fetch_assoc(mysqli_query($link, "SELECT COUNT(item_id) AS ct FROM item WHERE item_classification_id = $get_classification"))['ct'];
-				mysqli_query($link, "DELETE FROM item WHERE item_id = $id");
-				if ($remaining == 1) {
-					mysqli_query($link, "DELETE FROM trainer_responsibility WHERE item_classification_id = $get_classification");
-					mysqli_query($link, "DELETE FROM item_classification WHERE item_classification_id = $get_classification");
-				}
-				$result = 1;
-			}
-			else 
-				$result = 0;
+				echo json_encode($users);
+				break;
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			//	Search bar
+			// -----------------------------------------------------------------------------------------------------------------------------------------------
+			case 'search_user':
+				$is_filtered = $_POST['is_filtered'];
+				$team = $_POST['filter'];
+				$term = $_POST['search_term'];
+				$users = array();
 
-			echo json_encode($result);
-		}
-		else if ($_POST['action'] == 'save_edit_training_item') {
-			$id = $_POST['id'];
-			$name = $_POST['name'];
+				if ($is_filtered)
+					$qry_filter = " AND u.team_id = $team";
+				else
+					$qry_filter = "";
 
-			if (mysqli_query($link, "UPDATE item SET item_name = '$name' WHERE item_id = $id"))
-				$result = 1;
-			else 
-				$result = 0;
+				$qry = "SELECT u.user_id, CONCAT(u.last_name, ', ', u.first_name) AS name, t.team_name FROM users u, team t WHERE u.team_id = t.team_id AND (u.last_name LIKE '%" . $term . "%' OR u.first_name LIKE '%" . $term . "%')" . $qry_filter . " ORDER BY u.team_id, u.last_name";
+				$res = mysqli_query($link, $qry);
+				while ($row = mysqli_fetch_array($res))
+					$users[] = $row;
 
-			echo json_encode($result);
+				echo json_encode($users);
+				break;
 		}
 	}
 

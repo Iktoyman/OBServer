@@ -1,7 +1,17 @@
 <!-- Sidebar -->
 <div id="sidebar-wrapper">
     <ul class="sidebar-nav">
-        <hr>
+        <?php
+            if (isset($_SESSION['ob_manager_id'])) {
+            echo '<li style="margin-top: 0.5vw">'
+                . '<a href="add_user.php">Add New Employee</a>'
+                . '</li>'
+                . '<li>'
+                . '<a href="manage_users.php">Manage Employees</a>'
+                . '</li>'
+                . '<hr>';
+            }
+        ?>
         <li>
             <h4> Trainings </h4>
         </li>
@@ -12,11 +22,11 @@
             <?php echo "<a href='training/training_list.php?team=".$handled_team['team_id']."'>Training List</a>"; ?>
         </li>
         <?php
-        if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {
-        echo '<li>'
-            . '<a href="training/manager_view.php">Manager View</a>'
-            . '</li>';
-        }
+            if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {
+            echo '<li>'
+                . '<a href="training/manager_view.php">Manager View</a>'
+                . '</li>';
+            }
         ?>
         <hr>
         <li>
@@ -26,11 +36,15 @@
             <a href="access/">Dashboard</a>
         </li>
         <li>
-            <a href="">Access List</a>
+            <?php echo "<a href='access/access_list.php?team=".$handled_team['team_id']."'>Training List</a>"; ?>
         </li>
-        <li>
-            <a href="">Manager View</a>
-        </li>
+        <?php
+            if (isset($_SESSION['ob_manager_id']) || isset($_SESSION['ob_trainer_id'])) {
+            echo '<li>'
+                . '<a href="access/manager_view.php">Manager View</a>'
+                . '</li>';
+            }
+        ?>
         <hr>
         <li>
             <h4> Skills </h4>

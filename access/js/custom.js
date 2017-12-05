@@ -42,6 +42,11 @@ $(document).ready(function() {
 		$(this).parent().css('display', 'none');
 		$('.edit-date-btn').css('visibility', 'visible');
 	});
+
+	$('#team_select').on('change', function() {
+		if ($(this).val())
+			window.location.href = 'manager_view.php?team=' + $(this).val();
+	});
 });	
 
 function item_class_mo(id) {

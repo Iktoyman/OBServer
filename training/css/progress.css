@@ -11,7 +11,7 @@
     padding-top: 10px;
     text-align: center;
    font-family: "Century Gothic";
-   font-size: 50px;
+   font-size: 42px;
 }
 
 #employee-name {
@@ -48,7 +48,7 @@
 }
 
 table.GeneratedTable {
-  width: 75%;
+  width: 80%;
   background-color: #ffffff;
   border-collapse: collapse;
   border-width: 2px;

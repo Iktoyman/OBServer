@@ -179,6 +179,10 @@
     width: 400px !important;
 }
 
+.tableTdStyle {
+    vertical-align: top;
+}
+
 .iconStyle{
     width: 150px;
     height: 150px;

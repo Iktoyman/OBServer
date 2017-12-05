@@ -6,16 +6,6 @@
     session_start();
     require "establish_user.php";
 
-    // Check if manager, and get team if so.
-    $is_manager = mysqli_query($link, "SELECT m.team_id, t.team_name FROM manager m, team t WHERE t.team_id = m.team_id AND m.user_id = " . $_SESSION['ob_uid']);
-    if (mysqli_num_rows($is_manager)) {
-        $handled_team = mysqli_fetch_array($is_manager);
-    }
-    else {
-        $employee_team = mysqli_query($link, "SELECT u.team_id, t.team_name FROM users u, team t WHERE t.team_id = u.team_id AND u.user_id = " . $_SESSION['ob_uid']);
-        $handled_team = mysqli_fetch_array($employee_team);
-    }
-
     if (isset($_GET['user'])) {
         $user_id = $_GET['user'];
         $emp_name = mysqli_fetch_assoc(mysqli_query($link, "SELECT CONCAT(first_name, ' ', last_name) AS name FROM users WHERE user_id = " . $user_id))['name'];
@@ -24,8 +14,10 @@
         $user_id = $_SESSION['ob_uid'];
     }
 
+    $team = mysqli_fetch_assoc(mysqli_query($link, "SELECT team_id FROM users WHERE user_id = $user_id"))['team_id'];
+
     $item_classifications = array();
-    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = " . $handled_team['team_id'] . ") OR account_id IS NULL) AND type_id = 2");
+    $ic_res = mysqli_query($link, "SELECT item_classification_id, item_classification_name, icon_path FROM item_classification WHERE (account_id IN (SELECT account_id FROM account WHERE team_id = $team) OR account_id IS NULL) AND type_id = 2");
     $i = 0;
     while ($ic_row = mysqli_fetch_array($ic_res)) {
         $item_classifications[$i]['id'] = $ic_row['item_classification_id'];
@@ -125,7 +117,7 @@ else echo "<body>";
                 ?>
             </div>
             <div class="col-lg-12">
-                <div>
+                <div style='overflow: auto'>
                     <center>
                         <table>
                             <tr>

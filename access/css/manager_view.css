@@ -8,7 +8,17 @@
 	margin: 0 auto;
 }
 
+.GeneratedTable.employee-progress-table {
+	width: 95% !important;
+}
+
 .employee-progress-table th {
 	text-align: center;
 	padding: 1%;
+	font-size: 0.6vw;
+}
+
+#team_select {
+	font-size: 1vw;
+	width: 20%;
 }
